@@ -1,11 +1,11 @@
 name: Build iOS IPA
 
 on:
-  workflow_dispatch: # 支持在 GitHub 网页上手动点击按钮触发构建
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-15 # 使用 GitHub 免费提供的 macOS 云虚拟机
+    runs-on: macos-15
 
     steps:
       - name: Checkout Source Code
@@ -15,6 +15,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Select Xcode Version
+        run: |
+          # 切换到环境中最新可用的 Xcode（通常包含较新的 Swift 6.2+ 工具链）
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          xcodebuild -version
 
       - name: Generate Xcode Project
         run: |

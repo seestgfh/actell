@@ -1,0 +1,52 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Select Xcode Version
+        run: |
+          # 切换到环境中最新可用的 Xcode（通常包含较新的 Swift 6.2+ 工具链）
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Generate Xcode Project
+        run: |
+          python3 ios-app/scripts/generate_xcode_project.py
+
+      - name: Build App for iOS (Unsigned)
+        run: |
+          cd ios-app
+          xcodebuild clean build \
+            -project PhoneAgent.xcodeproj \
+            -scheme PhoneAgent \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package to IPA
+        run: |
+          cd ios-app
+          mkdir -p Payload
+          cp -r build/Release-iphoneos/PhoneAgent.app Payload/
+          zip -r PhoneAgent.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhoneAgent-Unsigned-IPA
+          path: ios-app/PhoneAgent.ipa

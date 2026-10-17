@@ -18,13 +18,17 @@ jobs:
 
       - name: Select Xcode Version
         run: |
-          # 切换到环境中最新可用的 Xcode（通常包含较新的 Swift 6.2+ 工具链）
           sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           xcodebuild -version
 
       - name: Generate Xcode Project
         run: |
           python3 ios-app/scripts/generate_xcode_project.py
+
+      - name: Patch Swift Tools Version in Dependencies
+        run: |
+          # 查找并降级所有 Package.swift 中的 swift-tools-version 从 6.2.0 到 6.1.0
+          find . -name "Package.swift" -exec sed -i '' 's/6.2.0/6.1.0/g' {} +
 
       - name: Build App for iOS (Unsigned)
         run: |
